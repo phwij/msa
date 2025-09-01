@@ -90,17 +90,6 @@ spec:
         }
       }
     }
-#    stage('Deploy') {
-#      steps {
-#        container('docker-cli') {
-#          sh '''
-#            apk add --no-cache curl bash kubectl > /dev/null
-#            kubectl set image deployment/frontend server=$DOCKER_IMAGE -n msa --record
-#            kubectl rollout status deployment/frontend -n msa
-#          '''
-#        }
-#      }
-#    }
   }
 
   post {
