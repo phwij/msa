@@ -44,7 +44,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: docker.io/hwijin12/frontend:6
+          image: docker.io/hwijin12/frontend:7
           ports:
           - containerPort: 8080
           readinessProbe:
