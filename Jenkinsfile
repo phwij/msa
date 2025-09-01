@@ -1,4 +1,7 @@
 pipeline {
+  triggers {
+    githubPush()
+  }
   agent {
     kubernetes {
       yaml """
@@ -8,13 +11,13 @@ metadata:
   labels:
     app: jenkins-dind-sidecar
 spec:
-  volumes:                            #dockerd는 유닉스 소켓을 통해 client와 통신, 해당 소켓을(docker.sock) 바인딩
-    - name: docker-sock    
-      emptyDir: {}                    #도커데몬(dockerd)이 바인딩 위치를 empydir로 공유 
+  volumes:
+    - name: docker-sock
+      emptyDir: {}  # 도커 데몬이 소켓을 여기다 씀
 
   containers:
     - name: dind
-      image: docker:24.0.7-dind       #dind 컨테이너는 내부의 도커 데몬을 실행
+      image: docker:24.0.7-dind
       securityContext:
         privileged: true
       env:
@@ -22,16 +25,16 @@ spec:
           value: ""
       args:
         - dockerd
-        - --host=unix:///var/run/docker.sock  #해당 위치에 소켓파일이 생썽
+        - --host=unix:///var/run/docker.sock
       volumeMounts:
-        - name: docker-sock           # 위의 바인딩 위치를 /var/run으로 설정
+        - name: docker-sock
           mountPath: /var/run
     
     - name: docker-cli
       image: docker:24.0.7
       command: ['sleep', 'infinity']  # CLI 용으로 띄우기 위한 dummy
       volumeMounts:
-        - name: docker-sock           # 동일한 /var/run/docker.sock을 공유, cli명령실행
+        - name: docker-sock
           mountPath: /var/run
 
     - name: jnlp
@@ -44,28 +47,31 @@ spec:
           memory: "256Mi"
           cpu: "100m"
       volumeMounts:
-        - name: docker-sock          # 동일한 /var/run/docker.sock을 공유, cli명령실행
-          mountPath: /var/run        #jnlp를 런타임에 자동주입 / 따라서 local docker socker과 비교했을때 따로 home/jenkins/agent를 마운트 하지 않아도 정상 동작한것
+        - name: docker-sock
+          mountPath: /var/run
 """
     }
   }
 
   environment {
-    DOCKER_IMAGE = "hwijin12/sidcardocker:${BUILD_NUMBER}"
+    IMAGE_TAG = "${env.BUILD_NUMBER}"
+    DOCKER_IMAGE = "hwijin12/frontend:${env.BUILD_NUMBER}"
     DOCKERHUB_CREDENTIALS_ID = "dockerhub-cred"
   }
 
   stages {
     stage('Clone') {
       steps {
-        git branch: 'main', url: 'https://github.com/phwij/sidecardocker.git'
+        git branch: 'master', url: 'https://github.com/phwij/msa.git'
       }
     }
 
     stage('Build') {
       steps {
         container('docker-cli') {
-          dir('apache/exam') {
+          dir('microservices-demo/src/frontend') {
+            sh 'pwd'
+            sh'ls -al'
             sh 'docker build -t $DOCKER_IMAGE .'
           }
         }
@@ -90,8 +96,8 @@ spec:
         container('docker-cli') {
           sh '''
             apk add --no-cache curl bash kubectl > /dev/null
-            kubectl set image deployment/apache apache=$DOCKER_IMAGE -n default --record
-            kubectl rollout status deployment/apache -n default
+            kubectl set image deployment/frontend server=$DOCKER_IMAGE -n msa --record
+            kubectl rollout status deployment/frontend -n msa
           '''
         }
       }
@@ -107,3 +113,4 @@ spec:
     }
   }
 }
+
