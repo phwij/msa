@@ -102,7 +102,7 @@ spec:
     stage('Update GitOps Repo (frontend only)') {
       steps {
         container('docker-cli') {
-          withCredentials([string(credentialsId: 'jenkins', variable: 'GH_TOKEN')]) {
+          withCredentials([string(credentialsId: 'github-pat', variable: 'GH_TOKEN')]) {
             sh '''
               set -euo pipefail
 
