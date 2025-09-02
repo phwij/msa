@@ -106,9 +106,13 @@ spec:
     stage('Update Repo (frontend only)') {
       steps {
         container('docker-cli') {
-          withCredentials([string(credentialsId: 'github-pat', variable: 'GH_TOKEN')]) {
+ withCredentials([usernamePassword(credentialsId: 'github-username-pat', usernameVariable: 'GIT_USER', passwordVariable: 'GH_TOKEN')]) {
             sh '''
               set -euo pipefail
+
+              REPO_HOST="github.com"
+              REPO_PATH="phwij/msa.git"
+              GIT_BRANCH="master"   # ArgoCD도 master면 여기도 master
 
               # public이라 clone은 토큰 없이, push만 PAT 사용
               CLONE_URL_RO="https://${REPO_HOST}/${REPO_PATH}"
@@ -122,8 +126,8 @@ spec:
               cd repo
               git checkout "$GIT_BRANCH"
 
-              TARGET_FILE="$GITOPS_TARGET_FILE"
-              CNAME="$FRONTEND_CONTAINER_NAME"
+              TARGET_FILE="microservices-demo/kubernetes-manifests/frontend.yaml"
+              CNAME="server"
 
               test -f "$TARGET_FILE" || { echo "❌ Not found: $TARGET_FILE"; exit 1; }
 
