@@ -121,6 +121,9 @@ spec:
               git clone "$GITOPS_REPO" msa-gitops
               cd msa-gitops
 
+              TARGET_FILE="${GITOPS_TARGET_FILE:-kubernetes-manifests/frontend.yaml}"
+              CNAME="${FRONTEND_CONTAINER_NAME:-server}"
+
               test -f "$GITOPS_TARGET_FILE" || { echo "❌ Not found: $GITOPS_TARGET_FILE"; exit 1; }
 
               echo '--- BEFORE ---'
