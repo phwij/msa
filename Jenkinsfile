@@ -107,6 +107,15 @@ spec:
             sh '''
               set -euo pipefail
 
+              # GitOps 리포 주소(https). 토큰 포함된 클론/푸시 URL을 따로 구성
+              REPO_HOST="github.com"
+              REPO_PATH="phwij/msa-gitops.git"
+              CLONE_URL="https://${GH_TOKEN}@${REPO_HOST}/${REPO_PATH}"
+  
+              # 필요 바이너리
+              apk add --no-cache git bash >/dev/null 2>&1 || true
+
+
               rm -rf msa-gitops
               GIT_CLONE_URL="${GITOPS_REPO/https:\/\//https://$GIT_USER:$GIT_TOKEN@}"
               git clone "$GITOPS_REPO" msa-gitops
