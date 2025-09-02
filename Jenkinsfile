@@ -117,7 +117,6 @@ spec:
 
 
               rm -rf msa-gitops
-              GIT_CLONE_URL="${GITOPS_REPO/https:\/\//https://$GIT_USER:$GIT_TOKEN@}"
               git clone "$GITOPS_REPO" msa-gitops
               cd msa-gitops
 
