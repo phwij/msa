@@ -63,7 +63,6 @@ spec:
     GITOPS_REPO = "https://github.com/phwij/msa.git'"           // ← 본인 GitOps 저장소로 변경
     GITOPS_TARGET_FILE = "microservices-demo/kubernetes-manifest/frontend.yaml"      // ← 실제 경로 확인
     FRONTEND_CONTAINER_NAME = "server"                             // ← frontend.yaml 안 컨테이너 이름
-    GITOPS_CRED_ID = "jenkins"                              // ← Jenkins에 등록된 SSH Key ID
 
   }
 
@@ -103,7 +102,7 @@ spec:
     stage('Update GitOps Repo (frontend only)') {
       steps {
         container('docker-cli') {
-          withCredentials([string(credentialsId: 'github-pat', variable: 'GH_TOKEN')]) {
+          withCredentials([string(credentialsId: 'jenkins', variable: 'GH_TOKEN')]) {
             sh '''
               set -euo pipefail
 
