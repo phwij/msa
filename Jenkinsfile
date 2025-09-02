@@ -91,13 +91,13 @@ spec:
       }
     }
 
-  post {
-    success {
-      echo '✅ 사이드카 DinD 기반 빌드 + 배포 성공!'
-    }
-    failure {
-      echo '❌ 실패했으니 로그 확인 바람!'
-    }
-  }
+   post {
+     success {
+       echo '✅ 사이드카 DinD 기반 빌드 + 배포 성공!'
+     }
+     failure {
+       echo '❌ 실패했으니 로그 확인 바람!'
+     }
+   }
+ }
 }
-
