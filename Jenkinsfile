@@ -108,7 +108,7 @@ spec:
 
               # GitOps 리포 주소(https). 토큰 포함된 클론/푸시 URL을 따로 구성
               REPO_HOST="github.com"
-              REPO_PATH="phwij/msa-gitops.git"
+              REPO_PATH="phwij/msa.git"
               CLONE_URL="https://${GH_TOKEN}@${REPO_HOST}/${REPO_PATH}"
   
               # 필요 바이너리
