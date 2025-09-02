@@ -102,73 +102,48 @@ spec:
         }
       }
     }
+stage('Update Repo (frontend only)') {
+  steps {
+    container('docker-cli') {
+      withCredentials([usernamePassword(credentialsId: 'github-username-pat', usernameVariable: 'GIT_USER', passwordVariable: 'GH_TOKEN')]) {
+        sh '''
+          set -euo pipefail
 
-    stage('Update Repo (frontend only)') {
-      steps {
-        container('docker-cli') {
- withCredentials([usernamePassword(credentialsId: 'github-username-pat', usernameVariable: 'GIT_USER', passwordVariable: 'GH_TOKEN')]) {
-            sh '''
-              set -euo pipefail
+          REPO_HOST="github.com"
+          REPO_PATH="phwij/msa.git"
+          GIT_BRANCH="master"
 
-              REPO_HOST="github.com"
-              REPO_PATH="phwij/msa.git"
-              GIT_BRANCH="master"   # ArgoCD도 master면 여기도 master
+          CLONE_URL_RO="https://${REPO_HOST}/${REPO_PATH}"                 # public read
+          PUSH_URL="https://${GIT_USER}:${GH_TOKEN}@${REPO_HOST}/${REPO_PATH}"  # write
 
-              # public이라 clone은 토큰 없이, push만 PAT 사용
-              CLONE_URL_RO="https://${REPO_HOST}/${REPO_PATH}"
-              PUSH_URL="https://${GH_TOKEN}@${REPO_HOST}/${REPO_PATH}"
+          apk add --no-cache git bash >/dev/null 2>&1 || true
 
-              # docker:alpine 계열엔 git/bash 없을 수 있음
-              apk add --no-cache git bash >/dev/null 2>&1 || true
+          rm -rf repo
+          git clone "$CLONE_URL_RO" repo
+          cd repo
+          git checkout "$GIT_BRANCH"
 
-              rm -rf repo
-              git clone "$CLONE_URL_RO" repo
-              cd repo
-              git checkout "$GIT_BRANCH"
+          TARGET_FILE="microservices-demo/kubernetes-manifests/frontend.yaml"
+          CNAME="server"
 
-              TARGET_FILE="microservices-demo/kubernetes-manifests/frontend.yaml"
-              CNAME="server"
+          awk -v NEW_IMAGE="$DOCKER_IMAGE" -v CNAME="$CNAME" '
+            BEGIN { in_target=0 }
+            $0 ~ "name:[[:space:]]*"CNAME"[[:space:]]*$" { in_target=1; print; next }
+            in_target==1 && $1 ~ /^image:/ {
+              sub(/^[[:space:]]*image:[[:space:]].*/, "        image: " NEW_IMAGE);
+              in_target=0; print; next
+            }
+            { print }
+          ' "$TARGET_FILE" > "$TARGET_FILE.tmp" && mv "$TARGET_FILE.tmp" "$TARGET_FILE"
 
-              test -f "$TARGET_FILE" || { echo "❌ Not found: $TARGET_FILE"; exit 1; }
+          git config user.email "jenkins@ci.local"
+          git config user.name  "Jenkins CI"
+          git add "$TARGET_FILE"
+          git commit -m "Update frontend image to $DOCKER_IMAGE" || { echo "No changes to commit"; exit 0; }
 
-              echo '--- BEFORE ---'
-              grep -nE "^[[:space:]]*image:[[:space:]]" "$TARGET_FILE" || true
-
-              # name: $CNAME 다음의 image: 라인만 안전 교체
-              awk -v NEW_IMAGE="$DOCKER_IMAGE" -v CNAME="$CNAME" '
-                BEGIN { in_target=0 }
-                $0 ~ "name:[[:space:]]*"CNAME"[[:space:]]*$" { in_target=1; print; next }
-                in_target==1 && $1 ~ /^image:/ {
-                  sub(/^[[:space:]]*image:[[:space:]].*/, "        image: " NEW_IMAGE);
-                  in_target=0; print; next
-                }
-                { print }
-              ' "$TARGET_FILE" > "$TARGET_FILE.tmp" && mv "$TARGET_FILE.tmp" "$TARGET_FILE"
-
-              echo '--- AFTER ---'
-              grep -nE "^[[:space:]]*image:[[:space:]]" "$TARGET_FILE" || true
-
-              git config user.email "jenkins@ci.local"
-              git config user.name  "Jenkins CI"
-              git add "$TARGET_FILE"
-              git commit -m "Update frontend image to $DOCKER_IMAGE" || { echo "No changes to commit"; exit 0; }
-
-              git push "$PUSH_URL" HEAD:"$GIT_BRANCH"
-            '''
-          }
-        }
+          git push "$PUSH_URL" HEAD:"$GIT_BRANCH"
+        '''
       }
     }
   }
-
-  post {
-    success {
-      echo '✅ DinD 빌드 + DockerHub Push + msa.git(frontend만) 업데이트 완료!'
-      echo '🔔 ArgoCD가 repo=msa.git, path=microservices-demo/kubernetes-manifests, rev=master 으로 감지합니다.'
-    }
-    failure {
-      echo '❌ 실패했어요. 각 단계 로그를 확인해주세요.'
-    }
-  }
 }
-
