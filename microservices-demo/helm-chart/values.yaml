@@ -138,6 +138,9 @@ frontend:
     limits:
       cpu: 200m
       memory: 128Mi
+        #image:
+        #  repository: docker.io/hwijin12/frontend
+        #      tag: "0806"
 
 loadGenerator:
   create: true
@@ -150,6 +153,10 @@ loadGenerator:
     limits:
       cpu: 500m
       memory: 512Mi
+        #    image:
+        #      repository: docker.io/hwijin12/loadgenerator
+        #      tag: "0806"
+
 
 paymentService:
   create: true
@@ -161,6 +168,9 @@ paymentService:
     limits:
       cpu: 200m
       memory: 128Mi
+        #    image:
+        #      repository: docker.io/hwijin12/paymentService
+        #      tag: "0806"
 
 productCatalogService:
   create: true
@@ -174,6 +184,10 @@ productCatalogService:
     limits:
       cpu: 200m
       memory: 128Mi
+        #    image:
+        #      repository: docker.io/hwijin12/productCatalogService
+        #      tag: "0806"
+      
 
 recommendationService:
   create: true
@@ -185,6 +199,9 @@ recommendationService:
     limits:
       cpu: 200m
       memory: 450Mi
+        #    image:
+        #      repository: docker.io/hwijin12/recommendationservice
+        #      tag: "0806"
 
 shippingService:
   create: true

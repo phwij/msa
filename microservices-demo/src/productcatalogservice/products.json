@@ -14,9 +14,9 @@
         },
         {
             "id": "66VCHSJNUP",
-            "name": "Camera",
+            "name": "Tank Top",
             "description": "Perfectly cropped cotton tank, with a scooped neckline.",
-            "picture": "/static/img/products/camera.jpg",
+            "picture": "/static/img/products/tang-top.jpg",
             "priceUsd": {
                 "currencyCode": "USD",
                 "units": 18,
