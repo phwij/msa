@@ -62,8 +62,9 @@ spec:
     // GitOps 관련
     GITOPS_REPO = "https://github.com/phwij/msa.git'"           // ← 본인 GitOps 저장소로 변경
     GITOPS_TARGET_FILE = "microservices-demo/kubernetes-manifest/frontend.yaml"      // ← 실제 경로 확인
-    GITOPS_CRED_ID = "jenkins"                              // ← Jenkins에 등록된 SSH Key ID
     FRONTEND_CONTAINER_NAME = "server"                             // ← frontend.yaml 안 컨테이너 이름
+    GITOPS_CRED_ID = "gitops-https"                              // ← Jenkins에 등록된 SSH Key ID
+
   }
 
   stages {
@@ -107,6 +108,7 @@ spec:
               set -euo pipefail
 
               rm -rf msa-gitops
+              GIT_CLONE_URL="${GITOPS_REPO/https:\/\//https://$GIT_USER:$GIT_TOKEN@}"
               git clone "$GITOPS_REPO" msa-gitops
               cd msa-gitops
 
