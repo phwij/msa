@@ -60,7 +60,7 @@ spec:
     DOCKERHUB_CREDENTIALS_ID = "dockerhub-cred"
 
     // GitOps 관련
-    GITOPS_REPO = "git@github.com:phwij/msa.git"           // ← 본인 GitOps 저장소로 변경
+    GITOPS_REPO = "https://github.com/phwij/msa.git'"           // ← 본인 GitOps 저장소로 변경
     GITOPS_TARGET_FILE = "microservices-demo/kubernetes-manifest/frontend.yaml"      // ← 실제 경로 확인
     GITOPS_CRED_ID = "jenkins"                              // ← Jenkins에 등록된 SSH Key ID
     FRONTEND_CONTAINER_NAME = "server"                             // ← frontend.yaml 안 컨테이너 이름
