@@ -99,59 +99,62 @@ spec:
       }
     }
 
-    stage('Update GitOps Repo (frontend only)') {
-      steps {
-        container('docker-cli') {
-          withCredentials([string(credentialsId: 'github-pat', variable: 'GH_TOKEN')]) {
-            sh '''
-              set -euo pipefail
+stage('Update Repo (frontend only)') {
+  steps {
+    container('docker-cli') {
+      withCredentials([string(credentialsId: 'github-pat', variable: 'GH_TOKEN')]) {
+        sh '''
+          set -euo pipefail
 
-              # GitOps 리포 주소(https). 토큰 포함된 클론/푸시 URL을 따로 구성
-              REPO_HOST="github.com"
-              REPO_PATH="phwij/msa.git"
-              CLONE_URL="https://${GH_TOKEN}@${REPO_HOST}/${REPO_PATH}"
-  
-              # 필요 바이너리
-              apk add --no-cache git bash >/dev/null 2>&1 || true
+          REPO_HOST="github.com"
+          REPO_PATH="phwij/msa.git"
+          BRANCH="main"
 
+          # public이라 clone은 토큰 없이, push는 PAT로
+          CLONE_URL_RO="https://github.com/${REPO_PATH}"
+          PUSH_URL="https://${GH_TOKEN}@${REPO_HOST}/${REPO_PATH}"
 
-              rm -rf msa-gitops
-              git clone "$GITOPS_REPO" msa-gitops
-              cd msa-gitops
+          # 필요 바이너리 설치 (docker:alpine 계열이면 git/bash 없음)
+          apk add --no-cache git bash >/dev/null 2>&1 || true
 
-              TARGET_FILE="${GITOPS_TARGET_FILE:-kubernetes-manifests/frontend.yaml}"
-              CNAME="${FRONTEND_CONTAINER_NAME:-server}"
+          rm -rf msa
+          git clone "$CLONE_URL_RO" msa
+          cd msa
+          git checkout "$BRANCH"
 
-              test -f "$GITOPS_TARGET_FILE" || { echo "❌ Not found: $GITOPS_TARGET_FILE"; exit 1; }
+          TARGET_FILE="microservices-demo/kubernetes-manifests/frontend.yaml"
+          CNAME="server"
 
-              echo '--- BEFORE ---'
-              grep -nE '^[[:space:]]*image:[[:space:]]' "$GITOPS_TARGET_FILE" || true
+          test -f "$TARGET_FILE" || { echo "❌ Not found: $TARGET_FILE"; exit 1; }
 
-              # name: server 다음에 나오는 image: 만 NEW_IMAGE로 교체 (다른 이미지 오염 방지)
-              awk -v NEW_IMAGE="$DOCKER_IMAGE" -v CNAME="$FRONTEND_CONTAINER_NAME" '
-                BEGIN { in_target=0 }
-                $0 ~ "name:[[:space:]]*"CNAME"[[:space:]]*$" { in_target=1; print; next }
-                in_target==1 && $1 ~ /^image:/ {
-                  sub(/^[[:space:]]*image:[[:space:]].*/, "        image: " NEW_IMAGE);
-                  in_target=0; print; next
-                }
-                { print }
-              ' "$GITOPS_TARGET_FILE" > "$GITOPS_TARGET_FILE.tmp" && mv "$GITOPS_TARGET_FILE.tmp" "$GITOPS_TARGET_FILE"
+          echo '--- BEFORE ---'
+          grep -nE "^[[:space:]]*image:[[:space:]]" "$TARGET_FILE" || true
 
-              echo '--- AFTER ---'
-              grep -nE '^[[:space:]]*image:[[:space:]]' "$GITOPS_TARGET_FILE" || true
+          # name: server 다음의 image: 라인만 안전 교체
+          awk -v NEW_IMAGE="$DOCKER_IMAGE" -v CNAME="$CNAME" '
+            BEGIN { in_target=0 }
+            $0 ~ "name:[[:space:]]*"CNAME"[[:space:]]*$" { in_target=1; print; next }
+            in_target==1 && $1 ~ /^image:/ {
+              sub(/^[[:space:]]*image:[[:space:]].*/, "        image: " NEW_IMAGE);
+              in_target=0; print; next
+            }
+            { print }
+          ' "$TARGET_FILE" > "$TARGET_FILE.tmp" && mv "$TARGET_FILE.tmp" "$TARGET_FILE"
 
-              git config user.email "jenkins@ci.local"
-              git config user.name  "Jenkins CI"
-              git add "$GITOPS_TARGET_FILE"
-              git commit -m "Update frontend image to $DOCKER_IMAGE" || echo "No changes to commit"
-              git push origin main
-            '''
-          }
-        }
+          echo '--- AFTER ---'
+          grep -nE "^[[:space:]]*image:[[:space:]]" "$TARGET_FILE" || true
+
+          git config user.email "jenkins@ci.local"
+          git config user.name  "Jenkins CI"
+          git add "$TARGET_FILE"
+          git commit -m "Update frontend image to $DOCKER_IMAGE" || { echo "No changes to commit"; exit 0; }
+
+          git push "$PUSH_URL" HEAD:"$BRANCH"
+        '''
       }
     }
   }
+}
 
   post {
     success {
