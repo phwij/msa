@@ -63,7 +63,7 @@ spec:
     GITOPS_REPO = "https://github.com/phwij/msa.git'"           // ← 본인 GitOps 저장소로 변경
     GITOPS_TARGET_FILE = "microservices-demo/kubernetes-manifest/frontend.yaml"      // ← 실제 경로 확인
     FRONTEND_CONTAINER_NAME = "server"                             // ← frontend.yaml 안 컨테이너 이름
-    GITOPS_CRED_ID = "gitops-https"                              // ← Jenkins에 등록된 SSH Key ID
+    GITOPS_CRED_ID = "da362740-ddc4-441b-bc68-3c704f6b7d85"                              // ← Jenkins에 등록된 SSH Key ID
 
   }
 
