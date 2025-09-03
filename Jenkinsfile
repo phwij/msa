@@ -92,6 +92,13 @@ spec:
     }
 
   }
+    stage('Trigger 2nd Jpb') {
+      steps {
+	  echo 'Trigger 2nd Job...'
+	  build job: 'update-manifests', wait: true
+      }
+    }
+
 
   post {
     success {
