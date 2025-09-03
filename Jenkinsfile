@@ -92,10 +92,11 @@ spec:
     }
 
   }
-    stage('Trigger 2nd Jpb') {
+    stage('Trigger Job2 (update-manifests)') {
       steps {
-	  echo 'Trigger 2nd Job...'
-	  build job: 'update-manifests', wait: true
+	  echo 'Trigger Job2...'
+	  build job: 'update-manifests', 
+	  wait: true
       }
     }
 
