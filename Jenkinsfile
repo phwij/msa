@@ -91,7 +91,6 @@ spec:
       }
     }
 
-  }
     stage('Trigger Job2 (update-manifests)') {
       steps {
 	  echo 'Trigger Job2...'
@@ -99,6 +98,8 @@ spec:
 	  wait: true
       }
     }
+
+  }
 
 
   post {
